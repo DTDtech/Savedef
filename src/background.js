@@ -19,11 +19,20 @@ try {
 
   const auth = getAuth();
 
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log("Signed in");
+    }
+    else {
+      console.log("Signed out");
+    }
+  });
+
   //listen for message from this extension to post data
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.command === 'post') {
-      const test1 = (async () => {
-        const key = request.key;
+      const addDefinition = (async () => {
+        const key = request.key.toLowerCase();
         const def = request.def;
 
         const docRef = doc(db, 'users', auth.currentUser.uid);
@@ -53,7 +62,7 @@ try {
             });
         }
       })
-      test1();
+      addDefinition();
       return true;
     }
     else if (request.command === 'signin') {
@@ -61,7 +70,7 @@ try {
         try {
           chrome.storage.local.set({ userdata: auth.currentUser.providerData })
         }
-        catch(e) {
+        catch (e) {
           console.log(e);
           sendResponse({ message: "Can't fetch user data from local storage" });
         }
@@ -117,31 +126,31 @@ try {
             const keyterm = selectionResultArr[0].result;
             const docRef = doc(db, 'users', auth.currentUser.uid);
 
-            await getDoc(docRef).
-              then((result) => {
-                if (result.exists) {
-                  // console.log(Object.keys(result.data()).toLowerCase().keyterm.toLowerCase());
-                  const lowerCaseKeyResult = Object.fromEntries(
-                    Object.entries(result.data()).map(([k, v]) => [k.toLowerCase(), v])
-                  );
-                  const lowerCaseKeyterm = keyterm.toLowerCase();
-                  const definitions = lowerCaseKeyResult[lowerCaseKeyterm];
-                  console.log(definitions);
-                  // chrome.runtime.sendMessage({
-                  //   command: 'show_definitions',
-                  //   defs: definitions
-                  // }, (response) => {
-                  //   console.log(response);
-                  // })
-                }
-                else {
-                  console.log("No definition exist");
-                }
-              })
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+              // console.log(Object.keys(result.data()).toLowerCase().keyterm.toLowerCase());
+              const lowerCaseKeyResult = Object.fromEntries(
+                Object.entries(docSnap.data()).map(([k, v]) => [k.toLowerCase(), v])
+              );
+              const lowerCaseKeyterm = keyterm.toLowerCase();
+              const definitions = lowerCaseKeyResult[lowerCaseKeyterm];
+              if (definitions !== undefined) {
+                chrome.tabs.sendMessage(tab.id, {
+                  command: 'show_definitions',
+                  defs: definitions
+                }, (response) => {
+                  console.log(response);
+                })
+              }
+              else {
+                console.log("No definition exist");
+              }
+            }
           })
+
       }
       catch (e) {
-        return;
+        console.log(e);
       }
     }
   })

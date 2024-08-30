@@ -1,3 +1,31 @@
+// window.addEventListener("load", () => {
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.command === "show_definitions") {
+    const definitions = request.defs;
+    const definitionList = document.createElement("div");
+    definitionList.id = "definition_list";
+    definitionList.onclick = (() => {
+      const definitionList = document.getElementById("definition_list");
+      definitionList.remove();
+    });
+
+    let definitionBox = document.createElement("ol");
+    definitions.forEach((definition) => {
+      let definitionItem = document.createElement("li");
+      definitionItem.classList.add("definition_item");
+      definitionItem.textContent = definition;
+      definitionBox.appendChild(definitionItem);
+    });
+    definitionList.appendChild(definitionBox);
+    document.body.appendChild(definitionList);
+    sendResponse({ message: "Showed definition list" });
+  }
+  else {
+    sendResponse({ message: "Wrong command" })
+  }
+})
+// })
+
 const textNodesUnder = (el) => {
   const children = [] // Type: Node[]
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, (node) => node.parentNode.nodeName !== 'SCRIPT' && node.parentNode.nodeName !== 'STYLE')
@@ -17,7 +45,7 @@ const highlightContent = (textToHighlight) => {
     var lastHighlightedPosition = 0;
 
     while (textNode.textContent.toLowerCase().indexOf(textToHighlight.toLowerCase(), lastHighlightedPosition) !== -1) {
-
+      console.log("value is:", lastHighlightedPosition);
       const textOffset = textNode.textContent.toLowerCase().indexOf(textToHighlight.toLowerCase(), lastHighlightedPosition);
 
       const range = new Range();
@@ -29,6 +57,7 @@ const highlightContent = (textToHighlight) => {
       range.surroundContents(wrapper);
 
       lastHighlightedPosition = range.endOffset;
+      console.log(lastHighlightedPosition);
     }
   }
 }
@@ -42,34 +71,7 @@ chrome.runtime.sendMessage({
   };
 })
 
-// window.addEventListener("load", () => {
-//   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-//     if (request.command === "show_definitions") {
-//       console.log(request);
-//       const definitions = request.defs;
-//       const definitionList = document.createElement("div");
-//       definitionList.setAttribute("id", "definition_list");
-//       definitionList.setAttribute("style", "display: block");
-//       definitionList.setAttribute("onclick", "hideDefinitionList()");
 
-//       definitions.forEach((definition) => {
-//         let definitionBox = document.createElement("div");
-//         definitionBox.textContent = definition;
-//         definitionList.appendChild(definitionBox);
-//       });
-//       definitionList.setAttribute("style", "display: block")
-//       sendResponse({ message: "Showed definition list" });
-//     }
-//     else {
-//       sendResponse({ message: "Wrong command" })
-//     }
-//   })
-
-//   const hideDefinitionList = () => {
-//     const definitionList = document.getElementById("definition_list");
-//     definitionList.setAttribute("style", "display: none")
-//   }
-// })
 
 
 

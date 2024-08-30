@@ -1,18 +1,18 @@
 "use strict";
 
-const definitionList = document.getElementById("definition_list");
+const addDefinitionForm = document.getElementById("add_definition_form");
 const loginForm = document.getElementById("login");
 
 const checkIsLoggedIn = async() => {
      
     const userdata= await chrome.storage.local.get("userdata");
         if (!userdata) {
-            definitionList.style.display = "none";
+            addDefinitionForm.style.display = "none";
             loginForm.classList.remove('display');
         }
         else {
             loginForm.style.display = "none";
-            definitionList.classList.remove('display');
+            addDefinitionForm.classList.remove('display');
         }
 }
 

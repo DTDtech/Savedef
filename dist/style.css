@@ -2,6 +2,36 @@
     background-color: yellow;
 }
 
+#definition_list {
+    width: 300px;
+    height: 200px;
+
+    padding: 20px;
+    
+    border-radius: 15px;
+    box-shadow: 10px 10px;
+    
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    
+    background-color: #328da8;
+    color: white;
+
+    position: fixed;
+    top:0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    
+    z-index: 2;
+    margin: auto;
+    
+    overflow: auto;
+}
+
+.definition_item {
+    line-height: 1.6;
+}
+
 body {
     font-family: Helvetica,sans-serif, "Font Awesome 6 Free";
 }
