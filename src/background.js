@@ -98,6 +98,7 @@ try {
       const getKey = (async () => {
         if (auth.currentUser !== null) {
           const docRef = doc(db, 'users', auth.currentUser.uid);
+          console.log(auth.currentUser.uid)
           await getDoc(docRef).then((result) => {
             if (result.exists) {
               sendResponse(Object.keys(result.data()));
@@ -124,7 +125,7 @@ try {
           //set selected text in chrome local storage and open add definition page
           .then(async (selectionResultArr) => {
             const keyterm = selectionResultArr[0].result;
-            const docRef = doc(db, 'users', auth.currentUser.uid);
+            const docRef = doc(db, 'users', auth?.currentUser?.uid);
 
             const docSnap = await getDoc(docRef);
             if (docSnap.exists()) {

@@ -27,12 +27,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // })
 
 const textNodesUnder = (el) => {
-  const children = [] // Type: Node[]
+  const children = [] 
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, (node) => node.parentNode.nodeName !== 'SCRIPT' && node.parentNode.nodeName !== 'STYLE')
   while (walker.nextNode()) {
     children.push(walker.currentNode)
   }
   return children;
+}
+
+const hightlightKeyword = (textNode, textOffset, textToHighlight) => {
+  //Identify the start and end location of keyword in textnode
+  const range = document.createRange();
+  range.setStart(textNode, textOffset);
+  range.setEnd(textNode, textOffset + textToHighlight.length);
+
+  const wrapper = document.createElement('span');
+  wrapper.classList.add('highlighted');
+  range.surroundContents(wrapper);
 }
 
 const highlightContent = (textToHighlight) => {
@@ -42,22 +53,17 @@ const highlightContent = (textToHighlight) => {
 
   for (let textNode of matchingElements) {
 
-    var lastHighlightedPosition = 0;
+    const textNodeParent = textNode.parentNode;
+    var allChildrenNodes = textNodeParent.childNodes;
+    var startingNodePosition = Array.from(allChildrenNodes).indexOf(textNode);
 
-    while (textNode.textContent.toLowerCase().indexOf(textToHighlight.toLowerCase(), lastHighlightedPosition) !== -1) {
-      console.log("value is:", lastHighlightedPosition);
-      const textOffset = textNode.textContent.toLowerCase().indexOf(textToHighlight.toLowerCase(), lastHighlightedPosition);
+    while (allChildrenNodes[startingNodePosition].textContent.toLowerCase().indexOf(textToHighlight.toLowerCase()) !== -1) {
 
-      const range = new Range();
-      range.setStart(textNode, textOffset);
-      range.setEnd(textNode, textOffset + textToHighlight.length);
+      const textOffset = allChildrenNodes[startingNodePosition].textContent.toLowerCase().indexOf(textToHighlight.toLowerCase());
 
-      const wrapper = document.createElement('span');
-      wrapper.classList.add('highlight');
-      range.surroundContents(wrapper);
+      hightlightKeyword(allChildrenNodes[startingNodePosition], textOffset, textToHighlight);
 
-      lastHighlightedPosition = range.endOffset;
-      console.log(lastHighlightedPosition);
+      startingNodePosition += 2;
     }
   }
 }
@@ -70,12 +76,4 @@ chrome.runtime.sendMessage({
     highlightContent(key);
   };
 })
-
-
-
-
-
-
-
-
 
