@@ -11,22 +11,24 @@ const checkIsLoggedIn = () => {
     chrome.runtime.sendMessage({
         command: 'getUserInfo',
         keys: ['userName', 'userEmail']
-    }, (response) => {
-        console.log(response);
-        if (!response || Object.keys(response).length === 0) {
-            console.log(response);
+    }, (userDetails) => {
+        console.log(userDetails);
+        if (!userDetails || Object.keys(userDetails).length === 0) {
             addDefinitionForm.style.display = 'none';
             signOutForm.style.display = 'none';
             signInForm.style.display = 'block';
         }
         else {
-            console.log(response);
+            console.log(userDetails);
             signInForm.style.display = 'none';
             addDefinitionForm.style.display = 'block';
             signOutForm.style.display = 'block';
-            // const userEmailField = document.getElementById('user_email');
 
-            // userEmailField.textContent = userData[0].email;
+            const userEmailField = document.getElementById('user_email');
+            const userNameField = document.getElementById('user_name');
+
+            userEmailField.textContent = userDetails.userEmail;
+            userNameField.textContent = userDetails.userName;
         }
     })
 }

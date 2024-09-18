@@ -6,7 +6,7 @@ import { getAuth, GoogleAuthProvider, signInWithCredential, onAuthStateChanged, 
 import signUserIn from "./utils/sign_in";
 import signUserOut from "./utils/sign_out";
 import addDefinition from "./utils/create_definition";
-import getKey from "./utils/get_keys";
+import getDictionary from "./utils/get_dictionary";
 import getDefinitions from "./utils/get_definitions";
 import dbConfig from "./utils/db_config";
 
@@ -22,12 +22,21 @@ try {
   onAuthStateChanged(auth, (user) => {
     if (user) {
       chrome.storage.local.set({
-        "userName": user.displayName,
-        "userEmail": user.email
+        "userName": user.providerData[0].displayName,
+        "userEmail": user.providerData[0].email
       })
       const userId = user.uid;
-      //listen for message from this extension to post data
+
+      chrome.scripting.registerContentScripts([{
+        id: "highlight-content-script",
+        js: ["content.js"],
+        css: ["style.css"],
+        matches: ["*://*/*"],
+        runAt: "document_end",
+      }])
+
       chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        //listen for message from this extension to post data
         if (request.command === 'post') {
           const key = request.key.toLowerCase();
           const definition = request.def;
@@ -38,7 +47,7 @@ try {
           return true;
         }
         else if (request.command === 'get_keys') {
-          getKey(db, userId)
+          getDictionary(db, userId)
             .then((result) => {
               if (result.exists) {
                 sendResponse(Object.keys(result.data()));
@@ -50,12 +59,13 @@ try {
         }
         else if (request.command === 'signout') {
           signUserOut(auth)
-            .then(() => {
-              sendResponse({ message: "Successfully signed out" });
-            })
+          .then(() => {
+            sendResponse({ message: "Successfully signed out" });
+          })
           return true;
         }
       })
+
 
       chrome.contextMenus.onClicked.addListener(async (info) => {
         if (info.menuItemId === 'get_definition') {
@@ -103,15 +113,8 @@ try {
 
     }
     else {
-      chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-        if (request.command === 'signin') {
-          signUserIn(auth)
-            .then(() => {
-              sendResponse({ message: "Successfully signed in" });
-            })
-          return true;
-        }
-      })
+
+      chrome.scripting.unregisterContentScripts();
 
       chrome.contextMenus.update(
         "get_definition",
@@ -137,8 +140,20 @@ try {
           enabled: false
         }
       )
+
+      chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+        if (request.command === 'signin') {
+          signUserIn(auth)
+            .then(() => {
+              sendResponse({ message: "Successfully signed in" });
+            })
+          return true;
+        }
+      })
+
     }
   });
+
 
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.command === 'getUserInfo') {

@@ -1,6 +1,60 @@
+/* inter-regular - latin */
+@font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../webfonts/inter-v18-latin/inter-v18-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+  }
+  /* inter-600 - latin */
+  @font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 600;
+    src: url('../webfonts/inter-v18-latin/inter-v18-latin-600.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+  }
+
 html {
     height: 200px;
-    width: 200px;
+    width: 320px;
+}
+
+#user_profile p {
+    display: flex;
+}
+
+#name_label, #email_label {
+    border-width: 2px 2px 2px 2px;
+    border-radius: 5px 0 0 5px;
+    border-style: solid;
+    border-color: black;
+    width: 70px;
+    padding: 0px 7px 0px;
+    display: inline-block;
+    line-height: 1.6;
+    background-color: #D4BDAC;
+    font-size: 18px;
+    font-family: "Inter";
+    font-weight: 600;
+    font-style: normal;
+}
+
+#user_name, #user_email {
+    border-width: 2px 2px 2px 0;
+    border-radius: 0 5px 5px 0;
+    border-style: solid;
+    border-color: black;
+    padding: 0px 7px 0px;
+    display: inline-block;
+    line-height: 1.6;
+    background-color: #FFF1DB;
+    font-size: 18px;
+    font-family: "Inter";
+    font-weight: 400;
+    font-style: normal;
+    flex-grow: 1;
+    overflow: hidden;
 }
 
 body {
