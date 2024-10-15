@@ -29,7 +29,6 @@ html {
     border-radius: 5px 0 0 5px;
     border-style: solid;
     border-color: black;
-    width: 70px;
     padding: 0px 7px 0px;
     display: inline-block;
     line-height: 1.6;
@@ -38,6 +37,7 @@ html {
     font-family: "Inter";
     font-weight: 600;
     font-style: normal;
+    flex: 0 0 50px;
 }
 
 #user_name, #user_email {

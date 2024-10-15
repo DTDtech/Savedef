@@ -1,37 +1,22 @@
 /******/ (() => { // webpackBootstrap
+/******/ 	"use strict";
+/******/ 	var __webpack_modules__ = ({
+
+/***/ "./src/content.js":
 /*!************************!*\
   !*** ./src/content.js ***!
   \************************/
-// window.addEventListener("load", () => {
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.command === "show_definitions") {
-    const definitions = request.defs;
-    const definitionList = document.createElement("div");
-    definitionList.id = "definition_list";
-    definitionList.onclick = (() => {
-      const definitionList = document.getElementById("definition_list");
-      definitionList.remove();
-    });
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
 
-    let definitionBox = document.createElement("ol");
-    definitions.forEach((definition) => {
-      let definitionItem = document.createElement("li");
-      definitionItem.classList.add("definition_item");
-      definitionItem.textContent = definition;
-      definitionBox.appendChild(definitionItem);
-    });
-    definitionList.appendChild(definitionBox);
-    document.body.appendChild(definitionList);
-    sendResponse({ message: "Showed definition list" });
-  }
-  else {
-    sendResponse({ message: "Wrong command" })
-  }
-})
-// })
+__webpack_require__.a(module, async (__webpack_handle_async_dependencies__, __webpack_async_result__) => { try {
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _utils_get_definitions__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils/get_definitions */ "./src/utils/get_definitions.js");
+/* harmony import */ var _utils_get_keys__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils/get_keys */ "./src/utils/get_keys.js");
+
+
 
 const textNodesUnder = (el) => {
-  const children = [] 
+  const children = []
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, (node) => node.parentNode.nodeName !== 'SCRIPT' && node.parentNode.nodeName !== 'STYLE')
   while (walker.nextNode()) {
     children.push(walker.currentNode)
@@ -39,49 +24,350 @@ const textNodesUnder = (el) => {
   return children;
 }
 
-const hightlightKeyword = (textNode, textOffset, textToHighlight) => {
-  //Identify the start and end location of keyword in textnode
-  const range = document.createRange();
-  range.setStart(textNode, textOffset);
-  range.setEnd(textNode, textOffset + textToHighlight.length);
+const showDefinitions = (key, definitions, highlightElement) => {
+  const definitionList = document.createElement("div");
+  definitionList.id = "definition_list";
 
-  const wrapper = document.createElement('span');
-  wrapper.classList.add('highlighted');
-  range.surroundContents(wrapper);
+  definitionList.onclick = (() => {
+    document.body.removeChild(definitionList);
+  });
+
+  let definitionBox = document.createElement("ol");
+  definitions.forEach((definition) => {
+    let definitionItem = document.createElement("li");
+    definitionItem.classList.add("definition_item");
+    definitionItem.textContent = definition;
+    definitionBox.appendChild(definitionItem);
+  });
+  definitionList.appendChild(definitionBox);
+
+  var delete_definition_button = document.createElement("BUTTON");
+  var delete_text = document.createTextNode("Delete all definitions");
+  delete_definition_button.appendChild(delete_text);
+  delete_definition_button.onclick = () => {
+
+    console.log(key);
+
+    var nodeList = document.querySelectorAll(".highlighted");
+
+    nodeList = Array.from(nodeList);
+
+    nodeList = nodeList.filter((node) => node.textContent.toLowerCase() === key.toLowerCase())
+
+    console.log(nodeList);
+
+    // const elementNodeList = 
+    nodeList.forEach((node) => {
+      node.parentElement.replaceChild(node.childNodes[0], node);
+    })
+  }
+  definitionList.appendChild(delete_definition_button);
+  document.body.appendChild(definitionList);
+  // highlightElement.appendChild(definitionList);
 }
 
-const highlightContent = (textToHighlight) => {
+const hightlightKeyword = (keyword) => {
   const allTextNodes = textNodesUnder(document.body);
-  var matchingElements = allTextNodes.filter(textNode => textNode.textContent.toLowerCase().includes(textToHighlight.toLowerCase()));
 
+  var matchingElements = allTextNodes.filter(textNode => textNode.textContent.toLowerCase().match(new RegExp("\\b" + keyword + "\\b", "i")));
 
-  for (let textNode of matchingElements) {
+  matchingElements.forEach((textNode, index) => {
+    var offsetAfterSplit = 0;
+    textNode.data.replace(new RegExp("\\b" + keyword + "\\b", "gi"), function (matched_string) {
+      //matched string, offset and the examined string is automatically passed to arguments
+      var args = [].slice.call(arguments),
+        offset = args[args.length - 2],
+        newTextNode = textNode.splitText(offset + offsetAfterSplit);
 
-    const textNodeParent = textNode.parentNode;
-    var allChildrenNodes = textNodeParent.childNodes;
-    var startingNodePosition = Array.from(allChildrenNodes).indexOf(textNode);
+      offsetAfterSplit -= textNode.data.length + matched_string.length;
 
-    while (allChildrenNodes[startingNodePosition].textContent.toLowerCase().indexOf(textToHighlight.toLowerCase()) !== -1) {
+      newTextNode.data = newTextNode.data.substring(matched_string.length);
 
-      const textOffset = allChildrenNodes[startingNodePosition].textContent.toLowerCase().indexOf(textToHighlight.toLowerCase());
+      textNode = newTextNode;
 
-      hightlightKeyword(allChildrenNodes[startingNodePosition], textOffset, textToHighlight);
+      const wrapper = document.createElement('span');
+      wrapper.textContent = matched_string;
+      wrapper.classList.add('highlighted');
+      wrapper.onclick = async () => {
+        const definitions = await (0,_utils_get_definitions__WEBPACK_IMPORTED_MODULE_0__["default"])(matched_string);
+        showDefinitions(matched_string, definitions, wrapper);
+      };
 
-      startingNodePosition += 2;
-    }
+      textNode.parentNode.insertBefore(wrapper, newTextNode);
+
+    })
+  })
+}
+
+const unhighlightKeyword = (keyword) => {
+  var nodeList = document.querySelectorAll(".highlighted");
+
+  nodeList = Array.from(nodeList);
+  nodeList = nodeList.filter((node) => node.textContent.toLowerCase() === key.toLowerCase() && node.id === keyword)
+
+  // const elementNodeList = 
+  nodeList.forEach((node) => {
+    node.parentElement.replaceChild(node.childNodes[0], node);
+  })
+}
+
+const highlightContent = (keywords) => {
+  const allTextNodes = textNodesUnder(document.body);
+
+  keywords.forEach(keyword => {
+    var matchingElements = allTextNodes.filter(textNode => textNode.textContent.toLowerCase().match(new RegExp("\\b" + keyword + "\\b", "i")));
+
+    matchingElements.forEach((textNode, index) => {
+      var offsetAfterSplit = 0;
+      textNode.data.replace(new RegExp("\\b" + keyword + "\\b", "gi"), function (matched_string) {
+        //matched string, offset and the examined string is automatically passed to arguments
+        var args = [].slice.call(arguments),
+          offset = args[args.length - 2],
+          newTextNode = textNode.splitText(offset + offsetAfterSplit);
+
+        offsetAfterSplit -= textNode.data.length + matched_string.length;
+
+        newTextNode.data = newTextNode.data.substring(matched_string.length);
+
+        textNode = newTextNode;
+
+        const wrapper = document.createElement('span');
+        wrapper.textContent = matched_string;
+        wrapper.classList.add('highlighted');
+        wrapper.onclick = async () => {
+          const definitions = await (0,_utils_get_definitions__WEBPACK_IMPORTED_MODULE_0__["default"])(matched_string);
+          showDefinitions(matched_string, definitions, wrapper);
+        };
+
+        textNode.parentNode.insertBefore(wrapper, newTextNode);
+
+      })
+    })
+  })
+}
+
+const userInfo = await chrome.storage.local.get("userInfo");
+
+if (Object.keys(userInfo).length > 0) {
+  const keys = await (0,_utils_get_keys__WEBPACK_IMPORTED_MODULE_1__["default"])();
+  console.log(keys);
+  if (keys.length > 0) {
+    var date1 = new Date();
+    highlightContent(keys);
+    var date2 = new Date();
+    console.log("first: ", date2 - date1);
+
   }
 }
 
-chrome.runtime.sendMessage({
-  command: 'get_keys',
-}, (response) => {
-  console.log(response);
-  for (const key of response) {
-    highlightContent(key);
-  };
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+  if (request.command === "add_highlight") {
+    hightlightKeyword(request.key);
+  }
 })
 
 
+
+__webpack_async_result__();
+} catch(e) { __webpack_async_result__(e); } }, 1);
+
+/***/ }),
+
+/***/ "./src/utils/get_definitions.js":
+/*!**************************************!*\
+  !*** ./src/utils/get_definitions.js ***!
+  \**************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+const getDefinitions = async (searchKey) => {
+    try {
+        //set selected text in chrome local storage and open add definition page
+        const userInfo = await chrome.storage.local.get("userInfo");
+        const uid = userInfo["userInfo"].uid;
+        const dictionary = await chrome.storage.local.get(uid);
+        if (typeof dictionary[uid] === "undefined") {
+            return [];
+        }
+        else if (typeof dictionary[uid][searchKey.toLowerCase()] === "undefined") {
+            return [];
+        }
+        else {
+            console.log(dictionary[uid]);
+            console.log(dictionary[uid][searchKey.toLowerCase()]);
+            return dictionary[uid][searchKey.toLowerCase()];
+        }
+        
+    }
+    catch (e) {
+        throw new Error("Can't get definition: " + e);
+    }
+}
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (getDefinitions);
+
+/***/ }),
+
+/***/ "./src/utils/get_keys.js":
+/*!*******************************!*\
+  !*** ./src/utils/get_keys.js ***!
+  \*******************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+const getKeys = async () => {
+    const userInfo = await chrome.storage.local.get("userInfo");
+    const uid = userInfo["userInfo"].uid;
+    const dictionary = await chrome.storage.local.get(uid);
+    console.log(dictionary);
+    if (Object.keys(dictionary).length !== 0 && dictionary[uid] !== undefined) {
+        return Object.keys(dictionary[uid]);
+    }    
+    else {
+        return {};
+    }
+}
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (getKeys);
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/async module */
+/******/ 	(() => {
+/******/ 		var webpackQueues = typeof Symbol === "function" ? Symbol("webpack queues") : "__webpack_queues__";
+/******/ 		var webpackExports = typeof Symbol === "function" ? Symbol("webpack exports") : "__webpack_exports__";
+/******/ 		var webpackError = typeof Symbol === "function" ? Symbol("webpack error") : "__webpack_error__";
+/******/ 		var resolveQueue = (queue) => {
+/******/ 			if(queue && queue.d < 1) {
+/******/ 				queue.d = 1;
+/******/ 				queue.forEach((fn) => (fn.r--));
+/******/ 				queue.forEach((fn) => (fn.r-- ? fn.r++ : fn()));
+/******/ 			}
+/******/ 		}
+/******/ 		var wrapDeps = (deps) => (deps.map((dep) => {
+/******/ 			if(dep !== null && typeof dep === "object") {
+/******/ 				if(dep[webpackQueues]) return dep;
+/******/ 				if(dep.then) {
+/******/ 					var queue = [];
+/******/ 					queue.d = 0;
+/******/ 					dep.then((r) => {
+/******/ 						obj[webpackExports] = r;
+/******/ 						resolveQueue(queue);
+/******/ 					}, (e) => {
+/******/ 						obj[webpackError] = e;
+/******/ 						resolveQueue(queue);
+/******/ 					});
+/******/ 					var obj = {};
+/******/ 					obj[webpackQueues] = (fn) => (fn(queue));
+/******/ 					return obj;
+/******/ 				}
+/******/ 			}
+/******/ 			var ret = {};
+/******/ 			ret[webpackQueues] = x => {};
+/******/ 			ret[webpackExports] = dep;
+/******/ 			return ret;
+/******/ 		}));
+/******/ 		__webpack_require__.a = (module, body, hasAwait) => {
+/******/ 			var queue;
+/******/ 			hasAwait && ((queue = []).d = -1);
+/******/ 			var depQueues = new Set();
+/******/ 			var exports = module.exports;
+/******/ 			var currentDeps;
+/******/ 			var outerResolve;
+/******/ 			var reject;
+/******/ 			var promise = new Promise((resolve, rej) => {
+/******/ 				reject = rej;
+/******/ 				outerResolve = resolve;
+/******/ 			});
+/******/ 			promise[webpackExports] = exports;
+/******/ 			promise[webpackQueues] = (fn) => (queue && fn(queue), depQueues.forEach(fn), promise["catch"](x => {}));
+/******/ 			module.exports = promise;
+/******/ 			body((deps) => {
+/******/ 				currentDeps = wrapDeps(deps);
+/******/ 				var fn;
+/******/ 				var getResult = () => (currentDeps.map((d) => {
+/******/ 					if(d[webpackError]) throw d[webpackError];
+/******/ 					return d[webpackExports];
+/******/ 				}))
+/******/ 				var promise = new Promise((resolve) => {
+/******/ 					fn = () => (resolve(getResult));
+/******/ 					fn.r = 0;
+/******/ 					var fnQueue = (q) => (q !== queue && !depQueues.has(q) && (depQueues.add(q), q && !q.d && (fn.r++, q.push(fn))));
+/******/ 					currentDeps.map((dep) => (dep[webpackQueues](fnQueue)));
+/******/ 				});
+/******/ 				return fn.r ? promise : getResult();
+/******/ 			}, (err) => ((err ? reject(promise[webpackError] = err) : outerResolve(exports)), resolveQueue(queue)));
+/******/ 			queue && queue.d < 0 && (queue.d = 0);
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module used 'module' so it can't be inlined
+/******/ 	var __webpack_exports__ = __webpack_require__("./src/content.js");
+/******/ 	
 /******/ })()
 ;
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29udGVudC5qcyIsIm1hcHBpbmdzIjoiOzs7O0FBQUE7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0EsS0FBSztBQUNMO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0EsS0FBSztBQUNMO0FBQ0E7QUFDQSxtQkFBbUIsbUNBQW1DO0FBQ3REO0FBQ0E7QUFDQSxtQkFBbUIsMEJBQTBCO0FBQzdDO0FBQ0EsQ0FBQztBQUNELElBQUk7QUFDSjtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQSxDQUFDO0FBQ0Q7QUFDQTtBQUNBO0FBQ0E7QUFDQSxDQUFDO0FBQ0QiLCJzb3VyY2VzIjpbIndlYnBhY2s6Ly9zYXZlZGVmLy4vc3JjL2NvbnRlbnQuanMiXSwic291cmNlc0NvbnRlbnQiOlsiLy8gd2luZG93LmFkZEV2ZW50TGlzdGVuZXIoXCJsb2FkXCIsICgpID0+IHtcclxuY2hyb21lLnJ1bnRpbWUub25NZXNzYWdlLmFkZExpc3RlbmVyKChyZXF1ZXN0LCBzZW5kZXIsIHNlbmRSZXNwb25zZSkgPT4ge1xyXG4gIGlmIChyZXF1ZXN0LmNvbW1hbmQgPT09IFwic2hvd19kZWZpbml0aW9uc1wiKSB7XHJcbiAgICBjb25zdCBkZWZpbml0aW9ucyA9IHJlcXVlc3QuZGVmcztcclxuICAgIGNvbnN0IGRlZmluaXRpb25MaXN0ID0gZG9jdW1lbnQuY3JlYXRlRWxlbWVudChcImRpdlwiKTtcclxuICAgIGRlZmluaXRpb25MaXN0LmlkID0gXCJkZWZpbml0aW9uX2xpc3RcIjtcclxuICAgIGRlZmluaXRpb25MaXN0Lm9uY2xpY2sgPSAoKCkgPT4ge1xyXG4gICAgICBjb25zdCBkZWZpbml0aW9uTGlzdCA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKFwiZGVmaW5pdGlvbl9saXN0XCIpO1xyXG4gICAgICBkZWZpbml0aW9uTGlzdC5yZW1vdmUoKTtcclxuICAgIH0pO1xyXG5cclxuICAgIGxldCBkZWZpbml0aW9uQm94ID0gZG9jdW1lbnQuY3JlYXRlRWxlbWVudChcIm9sXCIpO1xyXG4gICAgZGVmaW5pdGlvbnMuZm9yRWFjaCgoZGVmaW5pdGlvbikgPT4ge1xyXG4gICAgICBsZXQgZGVmaW5pdGlvbkl0ZW0gPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KFwibGlcIik7XHJcbiAgICAgIGRlZmluaXRpb25JdGVtLmNsYXNzTGlzdC5hZGQoXCJkZWZpbml0aW9uX2l0ZW1cIik7XHJcbiAgICAgIGRlZmluaXRpb25JdGVtLnRleHRDb250ZW50ID0gZGVmaW5pdGlvbjtcclxuICAgICAgZGVmaW5pdGlvbkJveC5hcHBlbmRDaGlsZChkZWZpbml0aW9uSXRlbSk7XHJcbiAgICB9KTtcclxuICAgIGRlZmluaXRpb25MaXN0LmFwcGVuZENoaWxkKGRlZmluaXRpb25Cb3gpO1xyXG4gICAgZG9jdW1lbnQuYm9keS5hcHBlbmRDaGlsZChkZWZpbml0aW9uTGlzdCk7XHJcbiAgICBzZW5kUmVzcG9uc2UoeyBtZXNzYWdlOiBcIlNob3dlZCBkZWZpbml0aW9uIGxpc3RcIiB9KTtcclxuICB9XHJcbiAgZWxzZSB7XHJcbiAgICBzZW5kUmVzcG9uc2UoeyBtZXNzYWdlOiBcIldyb25nIGNvbW1hbmRcIiB9KVxyXG4gIH1cclxufSlcclxuLy8gfSlcclxuXHJcbmNvbnN0IHRleHROb2Rlc1VuZGVyID0gKGVsKSA9PiB7XHJcbiAgY29uc3QgY2hpbGRyZW4gPSBbXSBcclxuICBjb25zdCB3YWxrZXIgPSBkb2N1bWVudC5jcmVhdGVUcmVlV2Fsa2VyKGVsLCBOb2RlRmlsdGVyLlNIT1dfVEVYVCwgKG5vZGUpID0+IG5vZGUucGFyZW50Tm9kZS5ub2RlTmFtZSAhPT0gJ1NDUklQVCcgJiYgbm9kZS5wYXJlbnROb2RlLm5vZGVOYW1lICE9PSAnU1RZTEUnKVxyXG4gIHdoaWxlICh3YWxrZXIubmV4dE5vZGUoKSkge1xyXG4gICAgY2hpbGRyZW4ucHVzaCh3YWxrZXIuY3VycmVudE5vZGUpXHJcbiAgfVxyXG4gIHJldHVybiBjaGlsZHJlbjtcclxufVxyXG5cclxuY29uc3QgaGlnaHRsaWdodEtleXdvcmQgPSAodGV4dE5vZGUsIHRleHRPZmZzZXQsIHRleHRUb0hpZ2hsaWdodCkgPT4ge1xyXG4gIC8vSWRlbnRpZnkgdGhlIHN0YXJ0IGFuZCBlbmQgbG9jYXRpb24gb2Yga2V5d29yZCBpbiB0ZXh0bm9kZVxyXG4gIGNvbnN0IHJhbmdlID0gZG9jdW1lbnQuY3JlYXRlUmFuZ2UoKTtcclxuICByYW5nZS5zZXRTdGFydCh0ZXh0Tm9kZSwgdGV4dE9mZnNldCk7XHJcbiAgcmFuZ2Uuc2V0RW5kKHRleHROb2RlLCB0ZXh0T2Zmc2V0ICsgdGV4dFRvSGlnaGxpZ2h0Lmxlbmd0aCk7XHJcblxyXG4gIGNvbnN0IHdyYXBwZXIgPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KCdzcGFuJyk7XHJcbiAgd3JhcHBlci5jbGFzc0xpc3QuYWRkKCdoaWdobGlnaHRlZCcpO1xyXG4gIHJhbmdlLnN1cnJvdW5kQ29udGVudHMod3JhcHBlcik7XHJcbn1cclxuXHJcbmNvbnN0IGhpZ2hsaWdodENvbnRlbnQgPSAodGV4dFRvSGlnaGxpZ2h0KSA9PiB7XHJcbiAgY29uc3QgYWxsVGV4dE5vZGVzID0gdGV4dE5vZGVzVW5kZXIoZG9jdW1lbnQuYm9keSk7XHJcbiAgdmFyIG1hdGNoaW5nRWxlbWVudHMgPSBhbGxUZXh0Tm9kZXMuZmlsdGVyKHRleHROb2RlID0+IHRleHROb2RlLnRleHRDb250ZW50LnRvTG93ZXJDYXNlKCkuaW5jbHVkZXModGV4dFRvSGlnaGxpZ2h0LnRvTG93ZXJDYXNlKCkpKTtcclxuXHJcblxyXG4gIGZvciAobGV0IHRleHROb2RlIG9mIG1hdGNoaW5nRWxlbWVudHMpIHtcclxuXHJcbiAgICBjb25zdCB0ZXh0Tm9kZVBhcmVudCA9IHRleHROb2RlLnBhcmVudE5vZGU7XHJcbiAgICB2YXIgYWxsQ2hpbGRyZW5Ob2RlcyA9IHRleHROb2RlUGFyZW50LmNoaWxkTm9kZXM7XHJcbiAgICB2YXIgc3RhcnRpbmdOb2RlUG9zaXRpb24gPSBBcnJheS5mcm9tKGFsbENoaWxkcmVuTm9kZXMpLmluZGV4T2YodGV4dE5vZGUpO1xyXG5cclxuICAgIHdoaWxlIChhbGxDaGlsZHJlbk5vZGVzW3N0YXJ0aW5nTm9kZVBvc2l0aW9uXS50ZXh0Q29udGVudC50b0xvd2VyQ2FzZSgpLmluZGV4T2YodGV4dFRvSGlnaGxpZ2h0LnRvTG93ZXJDYXNlKCkpICE9PSAtMSkge1xyXG5cclxuICAgICAgY29uc3QgdGV4dE9mZnNldCA9IGFsbENoaWxkcmVuTm9kZXNbc3RhcnRpbmdOb2RlUG9zaXRpb25dLnRleHRDb250ZW50LnRvTG93ZXJDYXNlKCkuaW5kZXhPZih0ZXh0VG9IaWdobGlnaHQudG9Mb3dlckNhc2UoKSk7XHJcblxyXG4gICAgICBoaWdodGxpZ2h0S2V5d29yZChhbGxDaGlsZHJlbk5vZGVzW3N0YXJ0aW5nTm9kZVBvc2l0aW9uXSwgdGV4dE9mZnNldCwgdGV4dFRvSGlnaGxpZ2h0KTtcclxuXHJcbiAgICAgIHN0YXJ0aW5nTm9kZVBvc2l0aW9uICs9IDI7XHJcbiAgICB9XHJcbiAgfVxyXG59XHJcblxyXG5jaHJvbWUucnVudGltZS5zZW5kTWVzc2FnZSh7XHJcbiAgY29tbWFuZDogJ2dldF9rZXlzJyxcclxufSwgKHJlc3BvbnNlKSA9PiB7XHJcbiAgY29uc29sZS5sb2cocmVzcG9uc2UpO1xyXG4gIGZvciAoY29uc3Qga2V5IG9mIHJlc3BvbnNlKSB7XHJcbiAgICBoaWdobGlnaHRDb250ZW50KGtleSk7XHJcbiAgfTtcclxufSlcclxuXHJcbiJdLCJuYW1lcyI6W10sInNvdXJjZVJvb3QiOiIifQ==

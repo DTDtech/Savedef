@@ -1,33 +1,8 @@
-// window.addEventListener("load", () => {
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.command === "show_definitions") {
-    const definitions = request.defs;
-    const definitionList = document.createElement("div");
-    definitionList.id = "definition_list";
-    definitionList.onclick = (() => {
-      const definitionList = document.getElementById("definition_list");
-      definitionList.remove();
-    });
-
-    let definitionBox = document.createElement("ol");
-    definitions.forEach((definition) => {
-      let definitionItem = document.createElement("li");
-      definitionItem.classList.add("definition_item");
-      definitionItem.textContent = definition;
-      definitionBox.appendChild(definitionItem);
-    });
-    definitionList.appendChild(definitionBox);
-    document.body.appendChild(definitionList);
-    sendResponse({ message: "Showed definition list" });
-  }
-  else {
-    sendResponse({ message: "Wrong command" })
-  }
-})
-// })
+import getDefinitions from "./utils/get_definitions";
+import getKeys from "./utils/get_keys";
 
 const textNodesUnder = (el) => {
-  const children = [] 
+  const children = []
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, (node) => node.parentNode.nodeName !== 'SCRIPT' && node.parentNode.nodeName !== 'STYLE')
   while (walker.nextNode()) {
     children.push(walker.currentNode)
@@ -35,45 +10,146 @@ const textNodesUnder = (el) => {
   return children;
 }
 
-const hightlightKeyword = (textNode, textOffset, textToHighlight) => {
-  //Identify the start and end location of keyword in textnode
-  const range = document.createRange();
-  range.setStart(textNode, textOffset);
-  range.setEnd(textNode, textOffset + textToHighlight.length);
+const showDefinitions = (key, definitions, highlightElement) => {
+  const definitionList = document.createElement("div");
+  definitionList.id = "definition_list";
 
-  const wrapper = document.createElement('span');
-  wrapper.classList.add('highlighted');
-  range.surroundContents(wrapper);
+  definitionList.onclick = (() => {
+    document.body.removeChild(definitionList);
+  });
+
+  let definitionBox = document.createElement("ol");
+  definitions.forEach((definition) => {
+    let definitionItem = document.createElement("li");
+    definitionItem.classList.add("definition_item");
+    definitionItem.textContent = definition;
+    definitionBox.appendChild(definitionItem);
+  });
+  definitionList.appendChild(definitionBox);
+
+  var delete_definition_button = document.createElement("BUTTON");
+  var delete_text = document.createTextNode("Delete all definitions");
+  delete_definition_button.appendChild(delete_text);
+  delete_definition_button.onclick = () => {
+
+    console.log(key);
+
+    var nodeList = document.querySelectorAll(".highlighted");
+
+    nodeList = Array.from(nodeList);
+
+    nodeList = nodeList.filter((node) => node.textContent.toLowerCase() === key.toLowerCase())
+
+    console.log(nodeList);
+
+    // const elementNodeList = 
+    nodeList.forEach((node) => {
+      node.parentElement.replaceChild(node.childNodes[0], node);
+    })
+  }
+  definitionList.appendChild(delete_definition_button);
+  document.body.appendChild(definitionList);
+  // highlightElement.appendChild(definitionList);
 }
 
-const highlightContent = (textToHighlight) => {
+const hightlightKeyword = (keyword) => {
   const allTextNodes = textNodesUnder(document.body);
-  var matchingElements = allTextNodes.filter(textNode => textNode.textContent.toLowerCase().includes(textToHighlight.toLowerCase()));
 
+  var matchingElements = allTextNodes.filter(textNode => textNode.textContent.toLowerCase().match(new RegExp("\\b" + keyword + "\\b", "i")));
 
-  for (let textNode of matchingElements) {
+  matchingElements.forEach((textNode, index) => {
+    var offsetAfterSplit = 0;
+    textNode.data.replace(new RegExp("\\b" + keyword + "\\b", "gi"), function (matched_string) {
+      //matched string, offset and the examined string is automatically passed to arguments
+      var args = [].slice.call(arguments),
+        offset = args[args.length - 2],
+        newTextNode = textNode.splitText(offset + offsetAfterSplit);
 
-    const textNodeParent = textNode.parentNode;
-    var allChildrenNodes = textNodeParent.childNodes;
-    var startingNodePosition = Array.from(allChildrenNodes).indexOf(textNode);
+      offsetAfterSplit -= textNode.data.length + matched_string.length;
 
-    while (allChildrenNodes[startingNodePosition].textContent.toLowerCase().indexOf(textToHighlight.toLowerCase()) !== -1) {
+      newTextNode.data = newTextNode.data.substring(matched_string.length);
 
-      const textOffset = allChildrenNodes[startingNodePosition].textContent.toLowerCase().indexOf(textToHighlight.toLowerCase());
+      textNode = newTextNode;
 
-      hightlightKeyword(allChildrenNodes[startingNodePosition], textOffset, textToHighlight);
+      const wrapper = document.createElement('span');
+      wrapper.textContent = matched_string;
+      wrapper.classList.add('highlighted');
+      wrapper.onclick = async () => {
+        const definitions = await getDefinitions(matched_string);
+        showDefinitions(matched_string, definitions, wrapper);
+      };
 
-      startingNodePosition += 2;
-    }
+      textNode.parentNode.insertBefore(wrapper, newTextNode);
+
+    })
+  })
+}
+
+const unhighlightKeyword = (keyword) => {
+  var nodeList = document.querySelectorAll(".highlighted");
+
+  nodeList = Array.from(nodeList);
+  nodeList = nodeList.filter((node) => node.textContent.toLowerCase() === key.toLowerCase() && node.id === keyword)
+
+  // const elementNodeList = 
+  nodeList.forEach((node) => {
+    node.parentElement.replaceChild(node.childNodes[0], node);
+  })
+}
+
+const highlightContent = (keywords) => {
+  const allTextNodes = textNodesUnder(document.body);
+
+  keywords.forEach(keyword => {
+    var matchingElements = allTextNodes.filter(textNode => textNode.textContent.toLowerCase().match(new RegExp("\\b" + keyword + "\\b", "i")));
+
+    matchingElements.forEach((textNode, index) => {
+      var offsetAfterSplit = 0;
+      textNode.data.replace(new RegExp("\\b" + keyword + "\\b", "gi"), function (matched_string) {
+        //matched string, offset and the examined string is automatically passed to arguments
+        var args = [].slice.call(arguments),
+          offset = args[args.length - 2],
+          newTextNode = textNode.splitText(offset + offsetAfterSplit);
+
+        offsetAfterSplit -= textNode.data.length + matched_string.length;
+
+        newTextNode.data = newTextNode.data.substring(matched_string.length);
+
+        textNode = newTextNode;
+
+        const wrapper = document.createElement('span');
+        wrapper.textContent = matched_string;
+        wrapper.classList.add('highlighted');
+        wrapper.onclick = async () => {
+          const definitions = await getDefinitions(matched_string);
+          showDefinitions(matched_string, definitions, wrapper);
+        };
+
+        textNode.parentNode.insertBefore(wrapper, newTextNode);
+
+      })
+    })
+  })
+}
+
+const userInfo = await chrome.storage.local.get("userInfo");
+
+if (Object.keys(userInfo).length > 0) {
+  const keys = await getKeys();
+  console.log(keys);
+  if (keys.length > 0) {
+    var date1 = new Date();
+    highlightContent(keys);
+    var date2 = new Date();
+    console.log("first: ", date2 - date1);
+
   }
 }
 
-chrome.runtime.sendMessage({
-  command: 'get_keys',
-}, (response) => {
-  console.log(response);
-  for (const key of response) {
-    highlightContent(key);
-  };
+chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+  if (request.command === "add_highlight") {
+    hightlightKeyword(request.key);
+  }
 })
+
 

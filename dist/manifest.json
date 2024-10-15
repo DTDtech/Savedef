@@ -1,23 +1,25 @@
 {
   "manifest_version": 3,
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAqWKwT9rV54dR85gDiAkmWziXEcZw/rV12zRu4sT2IA9xyfy4C539c06NHIP37qLEJRYDCG+hBRxclJSPK8r9zxnC4rIiu00FRzeg48BlpSFRPcx9EJt7+fzfR7XqLiJl1MEkwFS6Kkwjz0DppCLXiA/PbndcYpIttPs3GBIb7udhU7SEXu6lJxV7wdgg1f8cht0DBM/xH14LrzHIS4Ng/HHBT+Mqfi+BrEwpnyu3iGpcVzZi04eHdQEu338PM2oP0WD76Pt/vrIpQh+vrTkNswd6NS2ctsoi6aX9KdbzvBUbscXRnnTITDRkuuMEenTfZNMORD+Qk9qx56wYUKuWCQIDAQAB",
   "name": "savedef",
   "version": "1.0",
   "description": "Save definitions and images of key words",
   "host_permissions": [
     "<all_urls>"
   ],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA04dA6zxamXSM06Mnw87fMwypU7LBlVMhynRlSuIpLvTfaVL2lCJwx3A1cgL3IARu0NahSgM81aCM0MWOCtRxW8nlw21TmY+bYmLu5BH2HHxEmU7My/Cm4+tkBWuQKLrfV7ja8UZVL71g+Ljq8Qf36hmxdhJgFe95YJSslkXtW5CzRnatQqX1Im6JUpHLyw/45XpmXktnZcOA9mt7NwPUxp3LGq/Q36IU2FTvXq3/MYF95tGsRe+FhaCZo+r2gBhbAZQXLIuaNs9UplVu5QAaXBSsXwZIjONkAT2sAZcb24odONuFxt4fqI5zxekJggdaV9EkwNEq6bdPhMWVqw5NgwIDAQAB",
   "permissions": [
     "identity",
+    "identity.email",
     "storage",
     "tabs",
     "contextMenus",
     "scripting",
     "activeTab",
-    "cookies" 
+    "unlimitedStorage",
+    "sidePanel"
   ],
   "oauth2": {
-    "client_id": "1028764706692-bqc3qjacdf43i8jvkp3ot04itpmfnnoa.apps.googleusercontent.com",
+    "client_id": "238601540911-vnona7bpftpgqtsngibop1fje4gnvd4g.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/userinfo.email",
       "https://www.googleapis.com/auth/userinfo.profile"
@@ -27,9 +29,26 @@
     "default_title": "savedef",
     "default_popup": "popup.html"
   },
+  "side_panel": {
+    "default_path": "popup.html"
+  },
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "css": [
+        "style.css"
+      ],
+      "run_at": "document_end"
+    }
+  ],
   "web_accessible_resources": [
     {
       "resources": [

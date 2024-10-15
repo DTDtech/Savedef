@@ -4,33 +4,35 @@ const addDefinitionForm = document.getElementById('add_definition_form');
 const signInForm = document.getElementById('sign_in');
 const signOutForm = document.getElementById('sign_out');
 
+const userProfile = document.getElementById('user_profile');
+
 addDefinitionForm.style.display = 'none';
 signOutForm.style.display = 'none';
 
 const checkIsLoggedIn = () => {
-    chrome.runtime.sendMessage({
-        command: 'getUserInfo',
-        keys: ['userName', 'userEmail']
-    }, (userDetails) => {
-        console.log(userDetails);
-        if (!userDetails || Object.keys(userDetails).length === 0) {
-            addDefinitionForm.style.display = 'none';
-            signOutForm.style.display = 'none';
-            signInForm.style.display = 'block';
-        }
-        else {
-            console.log(userDetails);
-            signInForm.style.display = 'none';
-            addDefinitionForm.style.display = 'block';
-            signOutForm.style.display = 'block';
+    chrome.storage.local.get("userInfo")
+        .then((result) => {
+            console.log(result);
+            if (!result || Object.keys(result).length === 0) {
+                addDefinitionForm.style.display = 'none';
+                signOutForm.style.display = 'none';
+                userProfile.style.display = 'none';
+                signInForm.style.display = 'block';
+            }
+            else {
+                console.log(result);
+                signInForm.style.display = 'none';
+                addDefinitionForm.style.display = 'block';
+                signOutForm.style.display = 'block';
+                userProfile.style.display = 'block';
 
-            const userEmailField = document.getElementById('user_email');
-            const userNameField = document.getElementById('user_name');
+                const userEmailField = document.getElementById('user_email');
+                const userNameField = document.getElementById('user_name');
 
-            userEmailField.textContent = userDetails.userEmail;
-            userNameField.textContent = userDetails.userName;
-        }
-    })
+                userEmailField.textContent = result.userInfo.userEmail;
+                userNameField.textContent = result.userInfo.userName;
+            }
+        })
 }
 
 document.addEventListener('DOMContentLoaded', () => {
