@@ -29,8 +29,8 @@ html {
     border-radius: 5px 0 0 5px;
     border-style: solid;
     border-color: black;
-    width: 70px;
-    padding: 0px 7px 0px;
+    width: 50px;
+    padding: 0px 7px;
     display: inline-block;
     line-height: 1.6;
     background-color: #D4BDAC;
@@ -38,6 +38,7 @@ html {
     font-family: "Inter";
     font-weight: 600;
     font-style: normal;
+    flex: none;
 }
 
 #user_name, #user_email {
@@ -45,7 +46,7 @@ html {
     border-radius: 0 5px 5px 0;
     border-style: solid;
     border-color: black;
-    padding: 0px 7px 0px;
+    padding: 0px 7px;
     display: inline-block;
     line-height: 1.6;
     background-color: #FFF1DB;

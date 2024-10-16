@@ -1,7 +1,5 @@
 "use strict";
 
-
-
 const add_definition_button = document.getElementById("add_definition_button");
 
 add_definition_button.addEventListener("click", () => {
