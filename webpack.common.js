@@ -10,7 +10,9 @@ module.exports = {
         popup: './src/popup.js',
         popup: './src/popup.js',
         signin: './src/signin.js',
-        add_definition: './src/add_definition.js'
+        add_definition: './src/add_definition.js',
+        dictionary_panel: './src/dictionary_panel.js',
+        all_keys_panel: './src/all_keys_panel.js'
     },
     output: {
         filename: '[name].js',

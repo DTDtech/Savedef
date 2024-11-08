@@ -1,0 +1,135 @@
+/* noto-sans-display-regular - latin */
+@font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: 'Noto Sans Display';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../webfonts/noto-sans/noto-sans-display-v26-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+/* noto-sans-display-600 - latin */
+@font-face {
+    font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+    font-family: 'Noto Sans Display';
+    font-style: normal; 
+    font-weight: 600;
+    src: url('../webfonts/noto-sans/noto-sans-display-v26-latin-600.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
+body {
+    margin: 0px;
+    background-color: #e2d5b5;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#header {
+    display: flex;
+    justify-content: space-between;
+}
+
+#create_definition_button, #view_all_keys_button {
+    font-family: "Noto Sans Display";
+    font-weight: 600;
+    height: 35px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    border: none;
+    border-radius: 10px;
+    flex-shrink: 0;
+    cursor: pointer;
+    padding: 0px 10px 0px 10px;
+}
+
+#view_all_keys_button {
+    background-color: #b49bc8;
+}
+
+#create_definition_button {
+    background-color: #03a7c3;
+}
+
+#header, #definition_list {
+    font-family: "Noto Sans Display";
+    color: black;
+    padding: 10px;
+    margin-top: 10px;
+}
+
+#key {      
+    font-weight: 600;
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+#definition_list {
+    font-weight: 400;
+    padding: 0px 10px 10px 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.definition_box, #deletion_box {
+    line-height: 1.6;
+    padding: 10px 7px;
+    color: #040F0F;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.definition_box {
+    background-color: transparent;
+    border-radius: 5px;
+    margin: 7px 0px;
+    border: 1px solid #040F0F;
+}
+
+.definition_list_item {
+    margin: 0px;
+    white-space: pre;
+}
+
+.util_box {
+    justify-content: space-between;
+    margin-top: 11px;
+}
+
+.copy_button, .delete_button {
+    font-family: "Noto Sans Display";
+    font-weight: 600;
+    width : calc(100% / 4);
+    height: 30px;
+    padding: 7px;
+    border-width: 0px;
+    border-radius: 8px;
+    letter-spacing: 1px;
+}
+
+.copy_button {
+    background-color: #00c7e2;
+    text-align: center;
+    cursor: pointer;
+    color: white;
+    font-size: 12px;
+}
+
+.delete_button {
+    background-color: #EC5757;
+    text-align: center;
+    cursor: pointer;
+    color: white;
+    font-size: 12px;
+}
+
+#deletion_box {
+    background-color: #040F0F;
+    color: white;
+    cursor: pointer;
+    font-family: "Noto Sans Display";
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    width: 100%;
+    border-radius: 10px;
+    border: none;
+    margin-top: 10px;
+}

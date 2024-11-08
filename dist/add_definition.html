@@ -5,25 +5,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add definition</title>
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <link rel="stylesheet" type="text/css" href="popup.css">
     <link rel="stylesheet" href="fontawesome.css">
+    <link rel="stylesheet" href="add_definition.css">
 </head>
 
 <body>
+    <div>
+        <button id="previous_button">
+            <i class="fa-solid fa-arrow-left"></i>
+        </button>
+    </div>
 
-    <button id="previous_button">
-        <i class="fa-solid fa-arrow-left"></i>
-        <i class="fa-brands fa-github-square"></i>
-    </button>
+    <label for="search_key" class="label">Key:</label>
+    <input type="text" id="search_key" required>
+    <div id="key_empty_error">Key field must not be empty.</div>
 
-    <label for="search_key">Key:</label>
-    <input type="text" id="searchKey" required>
+    <label for="definition" class="label">Definition:</label>
+    <textarea id="definition" rows="5" required></textarea>
+    <div id="definition_empty_error">Definition field must not be empty.</div>
 
-    <label for="definition">Definition:</label>
-    <input type="text" id="definition" required>
+    <div id="success_notification">Definition saved.</div>
 
-    <button type="button" id="add_definition_button">Add definition</button>
+    <div id="util_box">
+        <button type="button" id="save_button">Save</button>
+        <button type="button" id="cancel_button">Cancel</button>
+    </div>
     <script type="text/javascript" src="add_definition.js"></script>
 </body>
 

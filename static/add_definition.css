@@ -11,65 +11,95 @@
 @font-face {
     font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
     font-family: 'Noto Sans Display';
-    font-style: normal;
+    font-style: normal; 
     font-weight: 600;
     src: url('../webfonts/noto-sans/noto-sans-display-v26-latin-600.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 
 html {
-    height: 100px;
-    width: 320px;
+    height: 350px;
+    width: 350px;
 }
 
 body {
     background-color: #e2d5b5;
-    font-family: Helvetica,sans-serif, "Font Awesome 6 Free";
-}
-
-#user_profile p {
     display: flex;
+    flex-direction: column;
 }
 
-#email_label {
-    background-color: #d4bdac;
-    font-size: 18px;
-    font-family: "Noto Sans Display";
-    font-weight: 600;
-    font-style: normal;
+#previous_button {
+    background-color: #b49bc8;
+    border-radius: 20px;
     border: none;
-    border-radius: 5px 0 0 5px;
-    padding: 0px 7px 0px;
-    display: inline-block;
-    line-height: 1.6;
-    flex: 0 0 50px;
+    padding: 5px 10px;
+    cursor: pointer;
 }
 
-#user_email {
-    background-color: #fff3e5;
-    font-size: 18px;
-    font-family: "Noto Sans Display";
-    font-weight: 400;
-    font-style: normal;
-    border: none; 
-    border-radius: 0 10px 10px 0;
-    padding: 0px 7px 0px;
-    display: inline-block;
-    line-height: 1.6;
-    flex-grow: 1;
-    overflow: hidden;
-}
-
-#add_definition_button {
-    background-color: #03a7c3;
+.label {
     font-family: "Noto Sans Display";
     font-weight: 600;
-    width: 50%;
+    font-size: 16px;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+#search_key, #definition {
+    font-family: "Noto Sans Display";
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);   
+    padding: 10px 7px;
+    margin-bottom: 5px;
+    border: none;
+}
+
+#search_key {
+    border-radius: 15px;
+}
+
+#definition {
+    border-radius: 5px;
+}
+
+textarea {
+    resize: none;
+}
+
+#key_empty_error, #definition_empty_error {
+    font-family: "Noto Sans Display";
+    display: none;
+    color: red;
+}
+
+#success_notification {
+    font-family: "Noto Sans Display";
+    font-weight: 600;
+    font-size: 14px;
+    text-align: center;
+    visibility: hidden;
+    margin: 10px 0px 10px 0px;
+}
+
+#util_box {
+    display: flex;
+    justify-content: space-between;
+}
+
+#save_button, #cancel_button {
+    font-family: "Noto Sans Display";
+    font-weight: 600;
+    width : calc(100% / 4);
     height: 35px;
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     border: none;
     border-radius: 15px;
     flex-shrink: 0;
     cursor: pointer;
-    display: block;
-    margin: auto;
+    padding: 0px 10px 0px 10px;
+}
+
+#save_button {
+    background-color: #00c7e2;
+}
+
+#cancel_button {
+    background-color: #ced4da;
 }

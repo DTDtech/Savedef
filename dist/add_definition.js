@@ -14,44 +14,51 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 const addDefinition = async (key, definition) => {
     const userInfoObject = await chrome.storage.local.get("userInfo");
-    const uid = userInfoObject.userInfo.uid;
-    chrome.storage.local.get(uid)
+    if (Object.keys(userInfoObject).length === 0) {
+        throw new Error("Unable to get user info from local storage.");
+    }
+    if (!userInfoObject.userInfo.hasOwnProperty('userEmail')) {
+        throw new Error("User info missing from user info object.");
+    }
+    const userEmail = userInfoObject.userInfo.userEmail;
+
+    chrome.storage.local.get(userEmail)
         .then((result) => {
-            console.log(result);
-            //Check if result is empty (uid doesn't exist in storage)
+            //Check if result is empty (userEmail doesn't exist in storage)
             if (Object.keys(result).length === 0) {
                 chrome.storage.local.set({
-                    [uid]: { [key.toLowerCase()]: [definition] }
+                    [userEmail]: { [key.toLowerCase()]: [definition] }
                 })
-                    .then(async () => {
-                        const storage = await chrome.storage.local.get(null);
-                        console.log(storage);
-                    })
             }
             //Add a new key into storage, avoid overwriting previous keys
-            else if (result[uid][key] == undefined) {
+            else if (!result[userEmail].hasOwnProperty(key.toLowerCase())) {
                 chrome.storage.local.set({
-                    [uid]: { ...result[uid], [key.toLowerCase()]: [definition] }
+                    [userEmail]: { ...result[userEmail], [key.toLowerCase()]: [definition] }
                 })
-                    .then(async () => {
-                        const storage = await chrome.storage.local.get(null);
-                        console.log(storage);
-                    })
             }
-            else if (Object.keys(result[uid][key]).length > 0) {
-                console.log(result[uid][key]);
-                console.log(...result[uid][key]);
+            else if (Object.keys(result[userEmail][key.toLowerCase()]).length > 0) {
                 chrome.storage.local.set(
                     {
-                        [uid]: {
-                            ...result[uid],
-                            [key.toLowerCase()]: [...result[uid][key], definition]
+                        [userEmail]: {
+                            ...result[userEmail],
+                            [key.toLowerCase()]: [...result[userEmail][key.toLowerCase()], definition]
                         }
                     }
                 )
-                    .then(async () => {
-                        const storage = await chrome.storage.local.get(null);
-                        console.log(storage);
+
+                chrome.storage.session.get('definitions_to_show')
+                    .then((sessionStorageResult) => {
+                        if (Object.keys(sessionStorageResult).length > 0) {
+                            if (key.toLowerCase() === Object.keys(sessionStorageResult['definitions_to_show'])[0]) {
+                                chrome.storage.session.set(
+                                    {
+                                        definitions_to_show: {
+                                            [key.toLowerCase()]: [...result[userEmail][key.toLowerCase()], definition]
+                                        }
+                                    }
+                                )
+                            }
+                        }
                     })
             }
         })
@@ -75,20 +82,17 @@ const getDefinitions = async (searchKey) => {
     try {
         //set selected text in chrome local storage and open add definition page
         const userInfo = await chrome.storage.local.get("userInfo");
-        const uid = userInfo["userInfo"].uid;
-        const dictionary = await chrome.storage.local.get(uid);
-        if (typeof dictionary[uid] === "undefined") {
+        const userEmail = userInfo["userInfo"].userEmail;
+        const dictionary = await chrome.storage.local.get(userEmail);
+        if (!dictionary.hasOwnProperty(userEmail)) {
             return [];
         }
-        else if (typeof dictionary[uid][searchKey.toLowerCase()] === "undefined") {
+        else if (!dictionary[userEmail].hasOwnProperty(searchKey.toLowerCase())) {
             return [];
         }
         else {
-            console.log(dictionary[uid]);
-            console.log(dictionary[uid][searchKey.toLowerCase()]);
-            return dictionary[uid][searchKey.toLowerCase()];
+            return dictionary[userEmail][searchKey.toLowerCase()];
         }
-        
     }
     catch (e) {
         throw new Error("Can't get definition: " + e);
@@ -164,10 +168,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_get_definitions__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils/get_definitions */ "./src/utils/get_definitions.js");
 
 
-;
-
 
 const previous_button = document.getElementById('previous_button');
+const success_notification = document.getElementById('success_notification');
 
 previous_button.addEventListener('click', () => {
     window.location.href = 'popup.html';
@@ -182,24 +185,48 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 })
 
-const add_definition_button = document.getElementById('add_definition_button');
+const save_button = document.getElementById('save_button');
 
-add_definition_button.addEventListener('click', async () => {
+save_button.addEventListener('click', async () => {
     const searchKey = document.getElementById('search_key').value;
     const definition = document.getElementById('definition').value;
-    
-    const definitions = await (0,_utils_get_definitions__WEBPACK_IMPORTED_MODULE_1__["default"])(searchKey);
-    const definitionExisted = (definitions.length === 0) ? false : true;
-    
-    (0,_utils_create_definition__WEBPACK_IMPORTED_MODULE_0__["default"])(searchKey, definition);
-    
-    if (!definitionExisted) {
-        let queryOptions = { active: true, currentWindow: true };
-        const [tab] = await chrome.tabs.query(queryOptions);
-        chrome.tabs.sendMessage(tab.id, {
-            command: 'add_highlight',
-            key: searchKey
-        })
+
+    const keyEmptyError = document.getElementById('key_empty_error');
+    const definitionEmptyError = document.getElementById('definition_empty_error');
+
+    if (!searchKey.trim() && !definition.trim()) {
+        keyEmptyError.style.display = "block";
+        definitionEmptyError.style.display = "block";
+    }
+    else if (!searchKey.trim()) {
+        keyEmptyError.style.display = "block";
+    }
+    else if (!definition.trim()) {
+        definitionEmptyError.style.display = "block";
+    }
+    else {
+        keyEmptyError.style.display = "none";
+        definitionEmptyError.style.display = "none";
+
+        const definitions = await (0,_utils_get_definitions__WEBPACK_IMPORTED_MODULE_1__["default"])(searchKey);
+        const definitionExisted = (definitions.length === 0) ? false : true;
+        
+        (0,_utils_create_definition__WEBPACK_IMPORTED_MODULE_0__["default"])(searchKey, definition);
+
+        success_notification.style.visibility = "visible";
+
+        setTimeout(() => {
+            success_notification.style.visibility = "hidden";
+        }, 3000)
+        
+        if (!definitionExisted) {
+            let queryOptions = { active: true, currentWindow: true };
+            const [tab] = await chrome.tabs.query(queryOptions);
+            chrome.tabs.sendMessage(tab.id, {
+                command: 'add_highlight',
+                key: searchKey
+            })
+        }
     }
 });
 

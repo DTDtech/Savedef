@@ -10,86 +10,15 @@ const textNodesUnder = (el) => {
   return children;
 }
 
-const showDefinitions = (key, definitions, highlightElement) => {
-  const definitionList = document.createElement("div");
-  definitionList.id = "definition_list";
-
-  definitionList.onclick = (() => {
-    document.body.removeChild(definitionList);
-  });
-
-  let definitionBox = document.createElement("ol");
-  definitions.forEach((definition) => {
-    let definitionItem = document.createElement("li");
-    definitionItem.classList.add("definition_item");
-    definitionItem.textContent = definition;
-    definitionBox.appendChild(definitionItem);
-  });
-  definitionList.appendChild(definitionBox);
-
-  var delete_definition_button = document.createElement("BUTTON");
-  var delete_text = document.createTextNode("Delete all definitions");
-  delete_definition_button.appendChild(delete_text);
-  delete_definition_button.onclick = () => {
-
-    console.log(key);
-
-    var nodeList = document.querySelectorAll(".highlighted");
-
-    nodeList = Array.from(nodeList);
-
-    nodeList = nodeList.filter((node) => node.textContent.toLowerCase() === key.toLowerCase())
-
-    console.log(nodeList);
-
-    // const elementNodeList = 
-    nodeList.forEach((node) => {
-      node.parentElement.replaceChild(node.childNodes[0], node);
-    })
-  }
-  definitionList.appendChild(delete_definition_button);
-  document.body.appendChild(definitionList);
-  // highlightElement.appendChild(definitionList);
+function escapeSpecialCharacters(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').trim();
 }
 
-const hightlightKeyword = (keyword) => {
-  const allTextNodes = textNodesUnder(document.body);
-
-  var matchingElements = allTextNodes.filter(textNode => textNode.textContent.toLowerCase().match(new RegExp("\\b" + keyword + "\\b", "i")));
-
-  matchingElements.forEach((textNode, index) => {
-    var offsetAfterSplit = 0;
-    textNode.data.replace(new RegExp("\\b" + keyword + "\\b", "gi"), function (matched_string) {
-      //matched string, offset and the examined string is automatically passed to arguments
-      var args = [].slice.call(arguments),
-        offset = args[args.length - 2],
-        newTextNode = textNode.splitText(offset + offsetAfterSplit);
-
-      offsetAfterSplit -= textNode.data.length + matched_string.length;
-
-      newTextNode.data = newTextNode.data.substring(matched_string.length);
-
-      textNode = newTextNode;
-
-      const wrapper = document.createElement('span');
-      wrapper.textContent = matched_string;
-      wrapper.classList.add('highlighted');
-      wrapper.onclick = async () => {
-        const definitions = await getDefinitions(matched_string);
-        showDefinitions(matched_string, definitions, wrapper);
-      };
-
-      textNode.parentNode.insertBefore(wrapper, newTextNode);
-
-    })
-  })
-}
-
-const unhighlightKeyword = (keyword) => {
-  var nodeList = document.querySelectorAll(".highlighted");
+const unhighlightKeyword = (key) => {
+  var nodeList = document.querySelectorAll(".highlighted_savedef");
 
   nodeList = Array.from(nodeList);
-  nodeList = nodeList.filter((node) => node.textContent.toLowerCase() === key.toLowerCase() && node.id === keyword)
+  nodeList = nodeList.filter((node) => node.textContent.toLowerCase() === key.toLowerCase())
 
   // const elementNodeList = 
   nodeList.forEach((node) => {
@@ -98,58 +27,98 @@ const unhighlightKeyword = (keyword) => {
 }
 
 const highlightContent = (keywords) => {
+
   const allTextNodes = textNodesUnder(document.body);
 
   keywords.forEach(keyword => {
-    var matchingElements = allTextNodes.filter(textNode => textNode.textContent.toLowerCase().match(new RegExp("\\b" + keyword + "\\b", "i")));
+    const escapedKeyword = escapeSpecialCharacters(keyword);
+    const matchingWordRegex = new RegExp(`(\\W)(${escapedKeyword})(\\W)`, 'i');
 
-    matchingElements.forEach((textNode, index) => {
+    var matchingTextNodes = allTextNodes.filter(textNode => textNode.textContent
+      .toLowerCase()
+      //todo: check all matching elements, suspection: all elements are returned because match always return value
+      .match(matchingWordRegex));
+
+    for (var i = 0; i < matchingTextNodes.length; i++) {
       var offsetAfterSplit = 0;
-      textNode.data.replace(new RegExp("\\b" + keyword + "\\b", "gi"), function (matched_string) {
-        //matched string, offset and the examined string is automatically passed to arguments
-        var args = [].slice.call(arguments),
-          offset = args[args.length - 2],
-          newTextNode = textNode.splitText(offset + offsetAfterSplit);
 
-        offsetAfterSplit -= textNode.data.length + matched_string.length;
+      matchingTextNodes[i].textContent.replace(
+        new RegExp(`(\\W)(${escapedKeyword})(\\W)`, 'gi'),
+        function (matched_string, p1, p2) {
+          //matched string, offset and the examined string is automatically passed to arguments
+          var args = [].slice.call(arguments),
+            //Add 1 to offset since offset is found before white space. Need to consider whitespace to find offset of keyword.
+            offset = args[args.length - 2] === 0 ? args[args.length - 2] : args[args.length - 2] + 1,
+            //the current processing text block is now the text before split, nextTextNode is now the text after split.
+            newTextNode = matchingTextNodes[i].splitText(offset + offsetAfterSplit);
 
-        newTextNode.data = newTextNode.data.substring(matched_string.length);
+          //the offset values are calculated only once and stored in the args argument, we need to 
+          //subtract from them after splitting text. 
+          offsetAfterSplit -= matchingTextNodes[i].textContent.length + p2.length;
 
-        textNode = newTextNode;
+          newTextNode.textContent = newTextNode.textContent.substring(p2.length);
 
-        const wrapper = document.createElement('span');
-        wrapper.textContent = matched_string;
-        wrapper.classList.add('highlighted');
-        wrapper.onclick = async () => {
-          const definitions = await getDefinitions(matched_string);
-          showDefinitions(matched_string, definitions, wrapper);
-        };
+          /*if there's no match in the text after split, push that text block list of all text nodes,
+          else set the current processing text block as the text after split*/
+          if (matchingWordRegex.test(newTextNode) === false) {
+            allTextNodes.push(newTextNode);
+          }
+          /*there is no need to push the current object inside allTextNodes, because the filter method
+          returns by reference, so any changes made to the text node inside matchingTextNodes is applied 
+          to the original text node in allTextNodes.*/
 
-        textNode.parentNode.insertBefore(wrapper, newTextNode);
+          //wrap the matching keyword with interactive element
+          const wrapper = document.createElement('span');
+          wrapper.textContent = p2;
+          wrapper.classList.add('highlighted_savedef');
 
-      })
-    })
+          wrapper.onclick = async () => {
+            if (chrome.runtime.id !== undefined) {
+              const definitions = await getDefinitions(p2);
+              chrome.storage.session.set(
+                {
+                  definitions_to_show: {
+                    [p2.toLowerCase()]: definitions
+                  }
+                }
+              );
+
+              chrome.runtime.sendMessage({
+                command: 'open_dictionary_panel',
+              })
+            };
+          }
+
+          matchingTextNodes[i].parentNode.insertBefore(wrapper, newTextNode);
+
+          matchingTextNodes[i] = newTextNode;
+        }
+      )
+    }
   })
 }
+
+
+
 
 const userInfo = await chrome.storage.local.get("userInfo");
 
 if (Object.keys(userInfo).length > 0) {
   const keys = await getKeys();
-  console.log(keys);
   if (keys.length > 0) {
-    var date1 = new Date();
     highlightContent(keys);
-    var date2 = new Date();
-    console.log("first: ", date2 - date1);
-
   }
 }
 
-chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener(async (request) => {
   if (request.command === "add_highlight") {
-    hightlightKeyword(request.key);
+    highlightContent([request.key]);
+  }
+  else if (request.command === "remove_highlight") {
+    unhighlightKeyword(request.key);
   }
 })
+
+
 
 

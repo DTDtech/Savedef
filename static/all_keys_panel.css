@@ -11,65 +11,43 @@
 @font-face {
     font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
     font-family: 'Noto Sans Display';
-    font-style: normal;
+    font-style: normal; 
     font-weight: 600;
     src: url('../webfonts/noto-sans/noto-sans-display-v26-latin-600.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
 }
 
-html {
-    height: 100px;
-    width: 320px;
-}
-
 body {
     background-color: #e2d5b5;
-    font-family: Helvetica,sans-serif, "Font Awesome 6 Free";
-}
-
-#user_profile p {
     display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 0px;
 }
 
-#email_label {
-    background-color: #d4bdac;
-    font-size: 18px;
+#header {
     font-family: "Noto Sans Display";
     font-weight: 600;
-    font-style: normal;
-    border: none;
-    border-radius: 5px 0 0 5px;
-    padding: 0px 7px 0px;
-    display: inline-block;
-    line-height: 1.6;
-    flex: 0 0 50px;
+    font-size: 22px;
+    padding: 10px;
 }
 
-#user_email {
-    background-color: #fff3e5;
-    font-size: 18px;
+#key_list {
     font-family: "Noto Sans Display";
+    color: black;
+    margin-top: 10px;
     font-weight: 400;
-    font-style: normal;
-    border: none; 
-    border-radius: 0 10px 10px 0;
-    padding: 0px 7px 0px;
-    display: inline-block;
-    line-height: 1.6;
-    flex-grow: 1;
-    overflow: hidden;
+    padding: 0px 10px 10px 10px;
+    display: flex;
+    flex-direction: column;
 }
 
-#add_definition_button {
-    background-color: #03a7c3;
-    font-family: "Noto Sans Display";
-    font-weight: 600;
-    width: 50%;
-    height: 35px;
+.key_list_item {
+    background-color: #fff3e5;
+    line-height: 1.6;
+    padding: 10px 7px;
+    color: #040F0F;
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    border: none;
-    border-radius: 15px;
-    flex-shrink: 0;
-    cursor: pointer;
-    display: block;
-    margin: auto;
+    border-radius: 5px;
+    font-size: 16px;
+    margin: 7px 0px;
 }

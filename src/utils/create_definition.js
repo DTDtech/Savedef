@@ -1,43 +1,50 @@
 const addDefinition = async (key, definition) => {
     const userInfoObject = await chrome.storage.local.get("userInfo");
-    const uid = userInfoObject.userInfo.uid;
-    chrome.storage.local.get(uid)
+    if (Object.keys(userInfoObject).length === 0) {
+        throw new Error("Unable to get user info from local storage.");
+    }
+    if (!userInfoObject.userInfo.hasOwnProperty('userEmail')) {
+        throw new Error("User info missing from user info object.");
+    }
+    const userEmail = userInfoObject.userInfo.userEmail;
+
+    chrome.storage.local.get(userEmail)
         .then((result) => {
-            console.log(result);
-            //Check if result is empty (uid doesn't exist in storage)
+            //Check if result is empty (userEmail doesn't exist in storage)
             if (Object.keys(result).length === 0) {
                 chrome.storage.local.set({
-                    [uid]: { [key.toLowerCase()]: [definition] }
+                    [userEmail]: { [key.toLowerCase()]: [definition] }
                 })
-                    .then(async () => {
-                        const storage = await chrome.storage.local.get(null);
-                        console.log(storage);
-                    })
             }
             //Add a new key into storage, avoid overwriting previous keys
-            else if (result[uid][key] == undefined) {
+            else if (!result[userEmail].hasOwnProperty(key.toLowerCase())) {
                 chrome.storage.local.set({
-                    [uid]: { ...result[uid], [key.toLowerCase()]: [definition] }
+                    [userEmail]: { ...result[userEmail], [key.toLowerCase()]: [definition] }
                 })
-                    .then(async () => {
-                        const storage = await chrome.storage.local.get(null);
-                        console.log(storage);
-                    })
             }
-            else if (Object.keys(result[uid][key]).length > 0) {
-                console.log(result[uid][key]);
-                console.log(...result[uid][key]);
+            else if (Object.keys(result[userEmail][key.toLowerCase()]).length > 0) {
                 chrome.storage.local.set(
                     {
-                        [uid]: {
-                            ...result[uid],
-                            [key.toLowerCase()]: [...result[uid][key], definition]
+                        [userEmail]: {
+                            ...result[userEmail],
+                            [key.toLowerCase()]: [...result[userEmail][key.toLowerCase()], definition]
                         }
                     }
                 )
-                    .then(async () => {
-                        const storage = await chrome.storage.local.get(null);
-                        console.log(storage);
+
+                chrome.storage.session.get('definitions_to_show')
+                    .then((sessionStorageResult) => {
+                        if (Object.keys(sessionStorageResult).length > 0) {
+                            if (key.toLowerCase() === Object.keys(sessionStorageResult['definitions_to_show'])[0]) {
+                                chrome.storage.session.set(
+                                    {
+                                        definitions_to_show: {
+                                            [key.toLowerCase()]: [...result[userEmail][key.toLowerCase()], definition]
+                                        }
+                                    }
+                                )
+                            }
+                        }
                     })
             }
         })

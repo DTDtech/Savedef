@@ -1,9 +1,8 @@
-"use strict"
-
 import addDefinition from "./utils/create_definition";
 import getDefinitions from "./utils/get_definitions";
 
 const previous_button = document.getElementById('previous_button');
+const success_notification = document.getElementById('success_notification');
 
 previous_button.addEventListener('click', () => {
     window.location.href = 'popup.html';
@@ -18,24 +17,48 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 })
 
-const add_definition_button = document.getElementById('add_definition_button');
+const save_button = document.getElementById('save_button');
 
-add_definition_button.addEventListener('click', async () => {
+save_button.addEventListener('click', async () => {
     const searchKey = document.getElementById('search_key').value;
     const definition = document.getElementById('definition').value;
-    
-    const definitions = await getDefinitions(searchKey);
-    const definitionExisted = (definitions.length === 0) ? false : true;
-    
-    addDefinition(searchKey, definition);
-    
-    if (!definitionExisted) {
-        let queryOptions = { active: true, currentWindow: true };
-        const [tab] = await chrome.tabs.query(queryOptions);
-        chrome.tabs.sendMessage(tab.id, {
-            command: 'add_highlight',
-            key: searchKey
-        })
+
+    const keyEmptyError = document.getElementById('key_empty_error');
+    const definitionEmptyError = document.getElementById('definition_empty_error');
+
+    if (!searchKey.trim() && !definition.trim()) {
+        keyEmptyError.style.display = "block";
+        definitionEmptyError.style.display = "block";
+    }
+    else if (!searchKey.trim()) {
+        keyEmptyError.style.display = "block";
+    }
+    else if (!definition.trim()) {
+        definitionEmptyError.style.display = "block";
+    }
+    else {
+        keyEmptyError.style.display = "none";
+        definitionEmptyError.style.display = "none";
+
+        const definitions = await getDefinitions(searchKey);
+        const definitionExisted = (definitions.length === 0) ? false : true;
+        
+        addDefinition(searchKey, definition);
+
+        success_notification.style.visibility = "visible";
+
+        setTimeout(() => {
+            success_notification.style.visibility = "hidden";
+        }, 3000)
+        
+        if (!definitionExisted) {
+            let queryOptions = { active: true, currentWindow: true };
+            const [tab] = await chrome.tabs.query(queryOptions);
+            chrome.tabs.sendMessage(tab.id, {
+                command: 'add_highlight',
+                key: searchKey
+            })
+        }
     }
 });
 

@@ -1,4 +1,4 @@
-.highlighted {
+.highlighted_savedef {
     visibility: visible !important;
     background-color: #916334;
     color: white;
@@ -6,30 +6,6 @@
     border-radius: 5px; 
 }
 
-#definition_list {
-    visibility: visible !important;
 
-    position: absolute !important;
 
-    width: 300px;
-    height: 200px;
-
-    padding: 20px;
-    
-    border-radius: 15px;
-    box-shadow: 10px 10px;
-    
-    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
-    
-    background-color: #328da8;
-    color: white;
-    
-    z-index: 10000;
-
-    overflow: auto;
-}
-
-.definition_item {
-    line-height: 1.6;
-}
 

@@ -1,85 +1,25 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithCredential } from "firebase/auth";
+chrome.storage.session.setAccessLevel({ accessLevel: 'TRUSTED_AND_UNTRUSTED_CONTEXTS' });
 
-import signUserIn from "./utils/sign_in";
-import signUserOut from "./utils/sign_out";
-import dbConfig from "./utils/db_config";
-
-const firebaseConfig = dbConfig;
-
-initializeApp(firebaseConfig);
-
-const auth = getAuth();
-
-chrome.runtime.onStartup.addListener(async () => {
-
-  const accessTokenExpiryTimeObject = await chrome.storage.local.get('access_token_expiry_time');
-
-  const accessTokenExpiryTime = accessTokenExpiryTimeObject.access_token_expiry_time; 
-
-  if (accessTokenExpiryTime >= Date.now()) {
-
-    const isInteractive = false;
-
-    signUserIn(isInteractive);
-
-  }
-})
-
-onAuthStateChanged(auth, (user) => {
-  if (user) {
+chrome.identity.getProfileUserInfo().
+  then((userInfo) => {
     chrome.storage.local.set({
       "userInfo": {
-        "userName": user.providerData[0].displayName,
-        "userEmail": user.providerData[0].email,
-        "uid": user.uid
+        "userEmail": userInfo.email
       }
     })
+  })
 
-    chrome.contextMenus.update(
-      'attach_definition',
-      {
-        enabled: true
-      }
-    )
-  }
-
-  else {
-    chrome.contextMenus.update(
-      'attach_definition',
-      {
-        enabled: false
-      })
-  }
-})
-
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.command === 'signin') {
-    
-    const isInteractive = true;
-
-    signUserIn(auth, isInteractive)
-      .then(() => {
-        sendResponse({ message: "Successfully signed in" });
-      })
-    return true;
-  }
-  else if (request.command === 'signout') {
-    signUserOut(auth)
-      .then(() => {
-        sendResponse({ message: "Successfully signed out" });
-      })
-    return true;
+chrome.runtime.onMessage.addListener(async (request) => {
+  if (request.command === 'open_dictionary_panel') {
+    chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
+      chrome.sidePanel.open({ tabId: tab.id });
+    });
   }
 })
 
 chrome.contextMenus.onClicked.addListener(async (info) => {
   if (info.menuItemId == 'attach_definition') {
     let queryOptions = { active: true, currentWindow: true };
-    // await chrome.tabs.query(queryOptions, ([tab]) => {
-    //   chrome.sidePanel.open({ tabId: tab.id });
-    // });
     const [tab] = await chrome.tabs.query(queryOptions);
     try {
       chrome.scripting.executeScript({
@@ -98,18 +38,36 @@ chrome.contextMenus.onClicked.addListener(async (info) => {
         })
     }
     catch (error) {
-      console.log("Can't attach definition: ", error);
+      throw new Error("Can't attach definition: ", error);
     }
   }
 })
 
-chrome.runtime.onInstalled.addListener((details) => {
+chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason !== "install" && details.reason !== "update") return;
   chrome.contextMenus.create({
     title: 'Attach definition',
     contexts: ["selection"],
     id: 'attach_definition',
-    enabled: false,
   })
+
+  // const tabs = await chrome.tabs.query({});
+  // try {
+  //   for (var i = 0; i < tabs.length; i++) {
+  //     if (!tabs[i].url.startsWith("chrome://") && tabs[i].status === "complete") {
+  //       chrome.scripting.executeScript({
+  //         target: { tabId: tabs[i].id },
+  //         files: ["content.js"]
+  //       })
+  //       chrome.scripting.insertCSS({
+  //         target: { tabId: tabs[i].id },
+  //         files: ["style.css"]
+  //       })
+  //     }
+  //   }
+  // }
+  // catch (error) {
+  //   throw new Error("Failed to inject scripts upon installation: ", error);
+  // }
 })
 
