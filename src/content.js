@@ -32,7 +32,7 @@ const highlightContent = (keywords) => {
 
   keywords.forEach(keyword => {
     const escapedKeyword = escapeSpecialCharacters(keyword);
-    const matchingWordRegex = new RegExp(`(\\W)(${escapedKeyword})(\\W)`, 'i');
+    const matchingWordRegex = new RegExp(`(^|\\s|\\W)(${escapedKeyword})($|\\s|\\W)`, 'i');
 
     var matchingTextNodes = allTextNodes.filter(textNode => textNode.textContent
       .toLowerCase()
@@ -42,17 +42,20 @@ const highlightContent = (keywords) => {
     for (var i = 0; i < matchingTextNodes.length; i++) {
       var offsetAfterSplit = 0;
 
+      console.log(matchingTextNodes[i].textContent);
+
       matchingTextNodes[i].textContent.replace(
-        new RegExp(`(\\W)(${escapedKeyword})(\\W)`, 'gi'),
+        new RegExp(`(^|\\s|\\W)(${escapedKeyword})($|\\s|\\W)`, 'gi'),
         function (matched_string, p1, p2) {
           //matched string, offset and the examined string is automatically passed to arguments
           var args = [].slice.call(arguments),
-            //Add 1 to offset since offset is found before white space. Need to consider whitespace to find offset of keyword.
-            offset = args[args.length - 2] === 0 ? args[args.length - 2] : args[args.length - 2] + 1,
+            /*Add 1 to offset if the offset found contains white space or non-word. Use p2 instead of escapedKeyword to check for 
+            offset because escapedKeyword may contain escaped special characters.*/
+            offset = matched_string.startsWith(p2) ? args[args.length - 2] : args[args.length - 2] + 1,
             //the current processing text block is now the text before split, nextTextNode is now the text after split.
             newTextNode = matchingTextNodes[i].splitText(offset + offsetAfterSplit);
-
-          //the offset values are calculated only once and stored in the args argument, we need to 
+          
+          //the offset values are calculated only once and stored in the args argument, need to 
           //subtract from them after splitting text. 
           offsetAfterSplit -= matchingTextNodes[i].textContent.length + p2.length;
 
@@ -97,9 +100,6 @@ const highlightContent = (keywords) => {
     }
   })
 }
-
-
-
 
 const userInfo = await chrome.storage.local.get("userInfo");
 

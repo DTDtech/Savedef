@@ -51,23 +51,23 @@ chrome.runtime.onInstalled.addListener(async (details) => {
     id: 'attach_definition',
   })
 
-  // const tabs = await chrome.tabs.query({});
-  // try {
-  //   for (var i = 0; i < tabs.length; i++) {
-  //     if (!tabs[i].url.startsWith("chrome://") && tabs[i].status === "complete") {
-  //       chrome.scripting.executeScript({
-  //         target: { tabId: tabs[i].id },
-  //         files: ["content.js"]
-  //       })
-  //       chrome.scripting.insertCSS({
-  //         target: { tabId: tabs[i].id },
-  //         files: ["style.css"]
-  //       })
-  //     }
-  //   }
-  // }
-  // catch (error) {
-  //   throw new Error("Failed to inject scripts upon installation: ", error);
-  // }
+  const tabs = await chrome.tabs.query({});
+  try {
+    for (var i = 0; i < tabs.length; i++) {
+      if (!tabs[i].url.startsWith("chrome://") && tabs[i].status === "complete") {
+        chrome.scripting.executeScript({
+          target: { tabId: tabs[i].id },
+          files: ["content.js"]
+        })
+        chrome.scripting.insertCSS({
+          target: { tabId: tabs[i].id },
+          files: ["style.css"]
+        })
+      }
+    }
+  }
+  catch (error) {
+    throw new Error("Failed to inject scripts upon installation: ", error);
+  }
 })
 

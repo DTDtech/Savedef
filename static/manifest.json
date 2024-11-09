@@ -6,7 +6,6 @@
   "host_permissions": [
     "<all_urls>"
   ],
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA04dA6zxamXSM06Mnw87fMwypU7LBlVMhynRlSuIpLvTfaVL2lCJwx3A1cgL3IARu0NahSgM81aCM0MWOCtRxW8nlw21TmY+bYmLu5BH2HHxEmU7My/Cm4+tkBWuQKLrfV7ja8UZVL71g+Ljq8Qf36hmxdhJgFe95YJSslkXtW5CzRnatQqX1Im6JUpHLyw/45XpmXktnZcOA9mt7NwPUxp3LGq/Q36IU2FTvXq3/MYF95tGsRe+FhaCZo+r2gBhbAZQXLIuaNs9UplVu5QAaXBSsXwZIjONkAT2sAZcb24odONuFxt4fqI5zxekJggdaV9EkwNEq6bdPhMWVqw5NgwIDAQAB",
   "permissions": [
     "identity",
     "identity.email",

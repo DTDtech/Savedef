@@ -1,11 +1,15 @@
 .highlighted_savedef {
-    visibility: visible !important;
-    background-color: #916334;
-    color: white;
+    background-color: #f4e9cd;
+    color: #3c3c3c; 
+    border-radius: 2px;
+    box-shadow: 0px 1px 0px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
-    border-radius: 5px; 
 }
 
-
+.highlighted_savedef:hover {
+    background-color: #e2d5b5; 
+    box-shadow: 0px 1px 0px rgba(0, 0, 0, 0.15);
+}
 
 
